@@ -1,0 +1,199 @@
+# Dynamic Programming Notes – House Robber I
+# (Recursion → Memoization → Tabulation → Space Optimization)
+
+"""
+Problem: House Robber I
+-----------------------
+You are given an array arr[] where arr[i] represents money in the i-th house.
+You cannot rob two adjacent houses (otherwise alarm triggers).
+
+Goal:
+Return the maximum amount of money you can rob without robbing adjacent houses.
+
+Example:
+arr = [40, 50, 10, 100]
+Rob houses 1 and 4 → Total = 50 + 100 = 150
+"""
+
+
+# ------------------------------------------------------------
+# 1. Pure Recursion (Exponential Time)
+# ------------------------------------------------------------
+
+def rob_recursive(i, arr):
+    if i == 0:
+        return arr[0]
+    if i == 1:
+        return max(arr[0], arr[1])
+
+    pick = arr[i] + rob_recursive(i - 2, arr)
+    not_pick = rob_recursive(i - 1, arr)
+
+    return max(pick, not_pick)
+
+
+"""
+Explanation:
+-----------
+Base Cases:
+- If i == 0 → only one house → return arr[0]
+- If i == 1 → return max(arr[0], arr[1])
+
+Recursive Case:
+Two choices:
+1. pick      = arr[i] + f(i-2)
+2. not_pick  = f(i-1)
+
+Return max(pick, not_pick)
+
+Complexity:
+-----------
+Time Complexity  : O(2^n)
+Space Complexity : O(n)
+   (height of recursion tree)
+"""
+
+
+# ------------------------------------------------------------
+# 2. Memoization (Top-Down DP)
+# ------------------------------------------------------------
+
+def rob_memo(i, arr, dp):
+    if i == 0:
+        return arr[0]
+    if i == 1:
+        return max(arr[0], arr[1])
+
+    if dp[i] != -1:
+        return dp[i]
+
+    pick = arr[i] + rob_memo(i - 2, arr, dp)
+    not_pick = rob_memo(i - 1, arr, dp)
+
+    dp[i] = max(pick, not_pick)
+    return dp[i]
+
+
+"""
+Explanation:
+-----------
+- dp[i] stores the max money that can be robbed up to index i.
+- Avoids recomputation by storing results.
+- Same recurrence as recursion but much faster.
+
+Complexity:
+-----------
+Time Complexity  : O(n)
+Space Complexity : O(n)
+   - dp array + recursion stack
+"""
+
+
+# ------------------------------------------------------------
+# 3. Tabulation (Bottom-Up DP)
+# ------------------------------------------------------------
+
+def rob_tab(arr):
+    n = len(arr)
+    if n == 1:
+        return arr[0]
+
+    dp = [0] * n
+    dp[0] = arr[0]
+    dp[1] = max(arr[0], arr[1])
+
+    for i in range(2, n):
+        pick = arr[i] + dp[i - 2]
+        not_pick = dp[i - 1]
+        dp[i] = max(pick, not_pick)
+
+    return dp[n - 1]
+
+
+"""
+Explanation:
+-----------
+- Build a dp array where dp[i] means:
+      max money robbed from houses [0..i]
+
+dp[0] = arr[0]
+dp[1] = max(arr[0], arr[1])
+
+Transition:
+dp[i] = max(arr[i] + dp[i-2], dp[i-1])
+
+Complexity:
+-----------
+Time Complexity  : O(n)
+Space Complexity : O(n)
+"""
+
+
+# ------------------------------------------------------------
+# 4. Space-Optimized Tabulation
+# ------------------------------------------------------------
+
+def rob_space_opt(arr):
+    n = len(arr)
+    if n == 1:
+        return arr[0]
+
+    prev2 = arr[0]                 # dp[i-2]
+    prev1 = max(arr[0], arr[1])    # dp[i-1]
+
+    for i in range(2, n):
+        pick = arr[i] + prev2
+        not_pick = prev1
+        curr = max(pick, not_pick)
+
+        # slide window forward
+        prev2 = prev1
+        prev1 = curr
+
+    return prev1
+
+
+"""
+Explanation:
+-----------
+Instead of dp array, store only last two results:
+- prev2 → dp[i-2]
+- prev1 → dp[i-1]
+
+Current = max(arr[i] + prev2, prev1)
+
+Update:
+(prev2 ← prev1)
+(prev1 ← curr)
+
+Complexity:
+-----------
+Time Complexity  : O(n)
+Space Complexity : O(1)
+"""
+
+
+"""
+------------------------------------------------------------
+House Robber I – Summary
+------------------------------------------------------------
+
+Method                       Time        Space
+------------------------------------------------
+Recursive                    O(2^n)      O(n)
+Memoization                  O(n)        O(n)
+Tabulation (DP array)        O(n)        O(n)
+Space-Optimized Tabulation   O(n)        O(1)
+
+Key Insight:
+------------
+At each house you decide:
+- Rob it  → gain arr[i] but skip i-1
+- Skip it → take best until i-1
+
+dp[i] = max(arr[i] + dp[i-2], dp[i-1])
+
+Classic DP problem involving optimizing choices and avoiding adjacent picks.
+
+------------------------------------------------------------
+"""
